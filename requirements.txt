@@ -1,1 +1,8 @@
-
+%%writefile requirements.txt
+transformers
+torch
+peft
+unsloth
+accelerate
+bitsandbytes
+datasets
