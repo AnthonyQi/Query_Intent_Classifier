@@ -8,7 +8,7 @@ Base model: `unsloth/Qwen2.5-3B-Instruct-bnb-4bit`
 
 ---
 
-# 1. Problem Definition
+## 1. Problem Definition
 
 The goal is to classify college-related user queries into structured intent categories such as:
 - recommendation filtering
@@ -18,15 +18,15 @@ The goal is to classify college-related user queries into structured intent cate
 
 ---
 
-# 2. Dataset Creation (`train_data.json`)
+## 2. Dataset Creation (`train_data.json`)
 
-## Source
+### Source
 
 The dataset was originally derived from a structured CSV file (`datasheet.csv`) containing:
 - user query text
 - corresponding intent labels and metadata
 
-## Conversion
+### Conversion
 
 Each row was converted into instruction-style format for supervised fine-tuning:
 
