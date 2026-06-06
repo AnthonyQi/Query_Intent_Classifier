@@ -8,3 +8,4 @@ __pycache__/
 checkpoint-*
 final_model/adapter_model.safetensors
 venv/
+.DS_Store
