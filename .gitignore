@@ -9,3 +9,4 @@ checkpoint-*
 final_model/adapter_model.safetensors
 venv/
 .DS_Store
+**/.DS_Store
