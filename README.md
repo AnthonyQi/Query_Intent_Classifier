@@ -91,7 +91,7 @@ hf auth login
 # paste your token when prompted
 ```
 
-> Ask Anthony to add your HF username to the private repo if you get an access error.
+> Ask to add your HF username to the private repo if you get an access error.
 
 ### 5. Run inference
 ```bash
