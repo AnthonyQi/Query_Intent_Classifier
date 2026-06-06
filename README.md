@@ -97,7 +97,6 @@ intent: recommendation
 
 - Python 3.10+
 - A GPU (CUDA required). If you don't have one locally, use [Google Colab](https://colab.research.google.com/) with a T4 GPU runtime.
-- A [Hugging Face](https://huggingface.co) account (required to download the private model weights)
 
 ---
 
@@ -121,22 +120,7 @@ venv\Scripts\activate           # Windows
 pip install -r requirements.txt
 ```
 
-### 4. Log into Hugging Face
-The model weights are hosted privately on Hugging Face. You need an account and access token to download them.
-
-- Sign up at [huggingface.co](https://huggingface.co)
-- Go to **Settings -> Access Tokens -> New Token**
-- Set role to **Read**, copy the `hf_...` token
-- Run:
-```bash
-pip install -r requirements.txt
-python inference.py
-# paste your token when prompted
-```
-
-> Ask Anthony to add your HF username to the private repo if you get an access error.
-
-### 5. Run inference
+### 4. Run inference
 ```bash
 python inference.py
 ```
@@ -162,14 +146,8 @@ intent: attribute_lookup
 !git clone https://github.com/AnthonyQi/Query_Intent_Classifier.git
 %cd Query_Intent_Classifier
 !pip install -r requirements.txt
-!pip install huggingface_hub
 ```
-3. Log into Hugging Face:
-```python
-from huggingface_hub import login
-login()  # paste your hf_... token
-```
-4. Run inference:
+3. Run inference:
 ```python
 exec(open("inference.py").read())
 ```
@@ -202,12 +180,12 @@ exec(open("inference.py").read())
 
 ## Model Files
 
-Adapter weights (`adapter_model.safetensors`) are hosted on Hugging Face at:
+Adapter weights (`adapter_model.safetensors`) are hosted publicly on Hugging Face at:
 ```text
 TheCupNoodle/query-intent-classifier
 ```
 
-They are downloaded automatically when you run `inference.py` after logging in with `hf auth login`. The file exceeds GitHub's 100MB limit and is excluded from this repo via `.gitignore`.
+They are downloaded automatically when you run `inference.py`. The file exceeds GitHub's 100MB limit and is excluded from this repo via `.gitignore`.
 
 ---
 
