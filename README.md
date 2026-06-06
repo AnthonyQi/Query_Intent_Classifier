@@ -35,7 +35,6 @@ The objective is to classify each query into structured labels that can later be
 Outputs include:
 - Persona
 - Intent
-- Intent Details
 
 Example:
 ```text
@@ -44,16 +43,60 @@ schools like MIT but cheaper
 
 Output:
 persona: high_school_student
-intent: recommendation_filtering
-intent_details: comparison_search
+intent: recommendation
 ```
+
+---
+
+## Valid Labels
+
+### Personas
+| Label | Description |
+|---|---|
+| `high_school_student` | High school student researching colleges |
+| `college_student` | Current college student |
+| `parent` | Parent of a prospective student |
+| `advisor` | Academic or independent advisor |
+| `counselor_teacher` | School counselor or teacher |
+| `college_b2b` | College or university (B2B) |
+| `transfer_student` | Transfer student |
+| `community_college_student` | Community college student |
+| `graduate_applicant` | Graduate school applicant |
+| `international_student` | International student |
+| `career_changer` | Career changer returning to education |
+| `edtech_founder` | EdTech founder or operator |
+| `industry_hiring_manager` | Industry hiring manager |
+| `scholarship_officer` | Scholarship foundation officer |
+| `employer_recruiter` | Employer or recruiter |
+| `government_analyst` | Government workforce analyst |
+
+### Intents
+| Label | Description |
+|---|---|
+| `exact_lookup` | Looking up a specific school by name |
+| `attribute_lookup` | Looking up a specific attribute (e.g. tuition, ranking) |
+| `filtered_search` | Searching with 1-2 filters |
+| `multi_constraint` | Searching with multiple constraints |
+| `comparison` | Comparing two or more schools |
+| `recommendation` | Asking for school recommendations |
+| `advisory` | Seeking general advice or guidance |
+| `emotional_advisory` | Seeking emotional support or reassurance |
+| `admissions_process` | Questions about the admissions process |
+| `career_outcomes` | Questions about career outcomes or job placement |
+| `cost_financial_aid` | Questions about cost or financial aid |
+| `campus_life_fit` | Questions about campus life or culture fit |
+| `b2b_partnership` | B2B or institutional partnership queries |
+| `strategy` | Strategic planning queries |
+| `reflective_advisory` | Reflective or identity-based advisory |
+| `analytics_request` | Requests for data or analytics |
+| `profile_management` | Profile or account management |
 
 ---
 
 ## Requirements
 
 - Python 3.10+
-- A GPU (CUDA-required). If you don't have one locally, use [Google Colab](https://colab.research.google.com/) with a T4 GPU runtime.
+- A GPU (CUDA required). If you don't have one locally, use [Google Colab](https://colab.research.google.com/) with a T4 GPU runtime.
 - A [Hugging Face](https://huggingface.co) account (required to download the private model weights)
 
 ---
@@ -82,7 +125,7 @@ pip install -r requirements.txt
 The model weights are hosted privately on Hugging Face. You need an account and access token to download them.
 
 - Sign up at [huggingface.co](https://huggingface.co)
-- Go to **Settings → Access Tokens → New Token**
+- Go to **Settings -> Access Tokens -> New Token**
 - Set role to **Read**, copy the `hf_...` token
 - Run:
 ```bash
@@ -91,7 +134,7 @@ hf auth login
 # paste your token when prompted
 ```
 
-> Ask to add your HF username to the private repo if you get an access error.
+> Ask Anthony to add your HF username to the private repo if you get an access error.
 
 ### 5. Run inference
 ```bash
@@ -102,15 +145,18 @@ You'll get an interactive prompt:
 ```text
 Query: schools like MIT but cheaper
 persona: high_school_student
-intent: recommendation_filtering
-intent_details: comparison_search
+intent: recommendation
+
+Query: UCLA tuition
+persona: parent
+intent: attribute_lookup
 ```
 
 ---
 
 ## Running on Google Colab (no local GPU)
 
-1. Open a new Colab notebook and set runtime to **T4 GPU** (Runtime → Change runtime type)
+1. Open a new Colab notebook and set runtime to **T4 GPU** (Runtime -> Change runtime type)
 2. Clone the repo and install deps:
 ```python
 !git clone https://github.com/AnthonyQi/Query_Intent_Classifier.git
@@ -135,16 +181,18 @@ exec(open("inference.py").read())
 ```text
 .
 ├── data/
-│   ├── datasheet.csv          # labeled query dataset
-│   └── train_data.json        # formatted training data
+│   ├── datasheet.csv              # original labeled query dataset
+│   ├── train_data.json            # initial training data
+│   └── train_data_clean_v2.json   # cleaned dataset used for retraining
 │
 ├── final_model/
-│   ├── adapter_config.json    # LoRA config
-│   ├── chat_template.jinja    # chat template
-│   ├── tokenizer.json         # tokenizer
-│   └── tokenizer_config.json  # tokenizer config
+│   ├── adapter_config.json        # LoRA adapter config
+│   ├── adapter_model.safetensors  # trained weights (hosted on HF, not in repo)
+│   ├── chat_template.jinja        # chat template
+│   ├── tokenizer.json             # tokenizer
+│   └── tokenizer_config.json      # tokenizer config
 │
-├── inference.py               # run this to classify queries
+├── inference.py                   # run this to classify queries
 ├── requirements.txt
 ├── README.md
 └── .gitignore
@@ -159,7 +207,7 @@ Adapter weights (`adapter_model.safetensors`) are hosted on Hugging Face at:
 TheCupNoodle/query-intent-classifier
 ```
 
-They are downloaded automatically when you run `inference.py` after logging in with `hf auth login`.
+They are downloaded automatically when you run `inference.py` after logging in with `hf auth login`. The file exceeds GitHub's 100MB limit and is excluded from this repo via `.gitignore`.
 
 ---
 
@@ -181,11 +229,11 @@ The CSV data was converted into instruction-style examples for supervised fine-t
 {
   "instruction": "Classify this college-related query.",
   "input": "schools like MIT but cheaper",
-  "output": "persona: high_school_student\nintent: recommendation_filtering\nintent_details: comparison_search"
+  "output": "persona: high_school_student\nintent: recommendation"
 }
 ```
 
-The resulting dataset is stored in `data/train_data.json`.
+The cleaned dataset used for retraining is stored in `data/train_data_clean_v2.json` (9,252 examples with normalized labels).
 
 ---
 
@@ -195,6 +243,7 @@ Training was performed using:
 - Unsloth
 - LoRA fine-tuning
 - Qwen2.5-3B-Instruct-bnb-4bit
+- Two training runs: initial fine-tune + retrain on cleaned labels
 
 ---
 
@@ -203,17 +252,18 @@ Training was performed using:
 Completed:
 - Dataset generation and labeling
 - CSV-to-training-format conversion
-- LoRA fine-tuning with Unsloth
+- Initial LoRA fine-tuning with Unsloth
+- Label cleaning and normalization (v2)
+- Retrain on cleaned dataset
 - Model export and Hugging Face upload
-- Inference pipeline
+- Inference pipeline with label validation
 - GitHub repository setup
 
 Next Steps:
-- Validation on unseen queries
-- Accuracy evaluation
-- Intent confusion analysis
-- Taxonomy refinement
-- Routing strategy development
+- Validation on 100-200 unseen queries
+- Accuracy measurement per intent and persona
+- Routing tier mapping
+- Taxonomy refinement based on validation results
 
 ---
 
