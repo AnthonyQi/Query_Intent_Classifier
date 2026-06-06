@@ -6,3 +6,5 @@ out/
 __pycache__/
 *.pyc
 checkpoint-*
+final_model/adapter_model.safetensors
+venv/
