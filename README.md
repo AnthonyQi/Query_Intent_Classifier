@@ -129,8 +129,8 @@ The model weights are hosted privately on Hugging Face. You need an account and 
 - Set role to **Read**, copy the `hf_...` token
 - Run:
 ```bash
-pip install huggingface_hub
-hf auth login
+pip install -r requirements.txt
+python inference.py
 # paste your token when prompted
 ```
 
