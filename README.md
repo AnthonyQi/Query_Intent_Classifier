@@ -7,13 +7,11 @@ This project fine-tunes a language model to classify college-related queries int
 The goal is to support a larger query routing system that can determine what a user is asking and route them to the appropriate search, recommendation, or advisory workflow.
 
 Base Model:
-
 ```text
 unsloth/Qwen2.5-3B-Instruct-bnb-4bit
 ```
 
 Fine-Tuning Method:
-
 ```text
 LoRA + Unsloth
 ```
@@ -25,33 +23,21 @@ LoRA + Unsloth
 College-related queries vary significantly in complexity and intent.
 
 Examples:
-
 ```text
 schools like MIT but cheaper
-```
-
-```text
 compare UCLA and UC Berkeley engineering
-```
-
-```text
 best colleges for computer science in California
-```
-
-```text
 how much is tuition at Purdue
 ```
 
 The objective is to classify each query into structured labels that can later be used for routing and decision-making.
 
 Outputs include:
-
-* Persona
-* Intent
-* Intent Details
+- Persona
+- Intent
+- Intent Details
 
 Example:
-
 ```text
 Input:
 schools like MIT but cheaper
@@ -64,54 +50,83 @@ intent_details: comparison_search
 
 ---
 
-## Dataset Creation
+## Requirements
 
-### Source Data
+- Python 3.10+
+- A GPU (CUDA-required). If you don't have one locally, use [Google Colab](https://colab.research.google.com/) with a T4 GPU runtime.
+- A [Hugging Face](https://huggingface.co) account (required to download the private model weights)
 
-The dataset originated from a labeled CSV file:
+---
 
-```text
-data/datasheet.csv
+## Setup & Running Inference
+
+### 1. Clone the repo
+```bash
+git clone https://github.com/AnthonyQi/Query_Intent_Classifier.git
+cd Query_Intent_Classifier
 ```
 
-Each row contains:
-
-* Query text
-* Persona label
-* Intent label
-* Additional metadata
-
-### Training Format
-
-The CSV data was converted into instruction-style examples for supervised fine-tuning.
-
-Example:
-
-```json
-{
-  "instruction": "Classify this college-related query.",
-  "input": "schools like MIT but cheaper",
-  "output": "persona: high_school_student\nintent: recommendation_filtering\nintent_details: comparison_search"
-}
+### 2. Create a virtual environment
+```bash
+python3 -m venv venv
+source venv/bin/activate        # Mac/Linux
+venv\Scripts\activate           # Windows
 ```
 
-The resulting dataset is stored in:
+### 3. Install dependencies
+```bash
+pip install -r requirements.txt
+```
 
+### 4. Log into Hugging Face
+The model weights are hosted privately on Hugging Face. You need an account and access token to download them.
+
+- Sign up at [huggingface.co](https://huggingface.co)
+- Go to **Settings → Access Tokens → New Token**
+- Set role to **Read**, copy the `hf_...` token
+- Run:
+```bash
+pip install huggingface_hub
+hf auth login
+# paste your token when prompted
+```
+
+> Ask Anthony to add your HF username to the private repo if you get an access error.
+
+### 5. Run inference
+```bash
+python inference.py
+```
+
+You'll get an interactive prompt:
 ```text
-data/train_data.json
+Query: schools like MIT but cheaper
+persona: high_school_student
+intent: recommendation_filtering
+intent_details: comparison_search
 ```
 
 ---
 
-## Model Training
+## Running on Google Colab (no local GPU)
 
-Training was performed using:
-
-* Unsloth
-* LoRA fine-tuning
-* Qwen2.5-3B-Instruct-bnb-4bit
-
-The model was trained to map college-related queries to the appropriate persona and intent labels.
+1. Open a new Colab notebook and set runtime to **T4 GPU** (Runtime → Change runtime type)
+2. Clone the repo and install deps:
+```python
+!git clone https://github.com/AnthonyQi/Query_Intent_Classifier.git
+%cd Query_Intent_Classifier
+!pip install -r requirements.txt
+!pip install huggingface_hub
+```
+3. Log into Hugging Face:
+```python
+from huggingface_hub import login
+login()  # paste your hf_... token
+```
+4. Run inference:
+```python
+exec(open("inference.py").read())
+```
 
 ---
 
@@ -120,16 +135,16 @@ The model was trained to map college-related queries to the appropriate persona 
 ```text
 .
 ├── data/
-│   ├── datasheet.csv
-│   └── train_data.json
+│   ├── datasheet.csv          # labeled query dataset
+│   └── train_data.json        # formatted training data
 │
 ├── final_model/
-│   ├── adapter_config.json
-│   ├── chat_template.jinja
-│   ├── tokenizer.json
-│   └── tokenizer_config.json
+│   ├── adapter_config.json    # LoRA config
+│   ├── chat_template.jinja    # chat template
+│   ├── tokenizer.json         # tokenizer
+│   └── tokenizer_config.json  # tokenizer config
 │
-├── inference.py
+├── inference.py               # run this to classify queries
 ├── requirements.txt
 ├── README.md
 └── .gitignore
@@ -139,81 +154,75 @@ The model was trained to map college-related queries to the appropriate persona 
 
 ## Model Files
 
-The repository includes:
-
-* Training dataset
-* LoRA configuration
-* Tokenizer files
-* Inference code
-
-The trained adapter weights file:
-
+Adapter weights (`adapter_model.safetensors`) are hosted on Hugging Face at:
 ```text
-adapter_model.safetensors
+TheCupNoodle/query-intent-classifier
 ```
 
-is not included in this repository because it exceeds GitHub's 100 MB file size limit.
+They are downloaded automatically when you run `inference.py` after logging in with `hf auth login`.
 
 ---
 
-## Running Inference
+## Dataset Creation
 
-Install dependencies:
+### Source Data
 
-```bash
-pip install -r requirements.txt
+The dataset originated from a labeled CSV file (`data/datasheet.csv`). Each row contains:
+- Query text
+- Persona label
+- Intent label
+- Additional metadata
+
+### Training Format
+
+The CSV data was converted into instruction-style examples for supervised fine-tuning:
+
+```json
+{
+  "instruction": "Classify this college-related query.",
+  "input": "schools like MIT but cheaper",
+  "output": "persona: high_school_student\nintent: recommendation_filtering\nintent_details: comparison_search"
+}
 ```
 
-Run inference:
+The resulting dataset is stored in `data/train_data.json`.
 
-```bash
-python inference.py
-```
+---
 
-Example query:
+## Model Training
 
-```text
-schools like MIT but cheaper
-```
-
-Example output:
-
-```text
-persona: high_school_student
-intent: recommendation_filtering
-intent_details: comparison_search
-```
+Training was performed using:
+- Unsloth
+- LoRA fine-tuning
+- Qwen2.5-3B-Instruct-bnb-4bit
 
 ---
 
 ## Current Status
 
 Completed:
-
-* Dataset generation and labeling
-* CSV-to-training-format conversion
-* LoRA fine-tuning with Unsloth
-* Model export
-* Inference pipeline
-* GitHub repository setup
+- Dataset generation and labeling
+- CSV-to-training-format conversion
+- LoRA fine-tuning with Unsloth
+- Model export and Hugging Face upload
+- Inference pipeline
+- GitHub repository setup
 
 Next Steps:
-
-* Validation on unseen queries
-* Accuracy evaluation
-* Intent confusion analysis
-* Taxonomy refinement
-* Routing strategy development
+- Validation on unseen queries
+- Accuracy evaluation
+- Intent confusion analysis
+- Taxonomy refinement
+- Routing strategy development
 
 ---
 
 ## Project Context
 
 This project is part of a larger query-routing system designed to:
-
-1. Understand user intent.
-2. Identify user persona.
-3. Route simple queries directly to search.
-4. Route complex queries to more advanced workflows.
+1. Understand user intent
+2. Identify user persona
+3. Route simple queries directly to search
+4. Route complex queries to more advanced workflows
 
 The classifier serves as the first stage of that routing pipeline.
